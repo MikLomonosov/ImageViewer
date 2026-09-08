@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace ImageViewer;
+namespace ImageViewer.Wpf;
 
 /// <summary>
 /// Interaction logic for App.xaml
