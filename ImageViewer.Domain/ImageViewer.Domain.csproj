@@ -7,11 +7,4 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Aggregates\" />
-      <Folder Include="Entities\" />
-      <Folder Include="Repositories\" />
-      <Folder Include="ValueObjects\" />
-    </ItemGroup>
-
 </Project>
