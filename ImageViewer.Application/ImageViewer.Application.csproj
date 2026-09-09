@@ -7,4 +7,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\ImageViewer.Domain\ImageViewer.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
