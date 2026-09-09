@@ -10,12 +10,13 @@ public class Image
     public DateTimeOffset CreatedDateUtc { get; private set; }
     public FileSize Size { get; private set; }
     public ImageDimensions? Dimensions { get; private set; }
-    public bool HasThumbnail => _thumbnailData is not null;
+    public bool HasThumbnail => _thumbnail is not null;
     public bool HasOriginalData => _originalData is not null;
+    public ImageBinaryData? Thumbnail => _thumbnail;
     
 
-    private byte[]? _thumbnailData;
-    private byte[]? _originalData;
+    private ImageBinaryData? _thumbnail;
+    private ImageBinaryData? _originalData;
 
     #region constructors
 
@@ -54,20 +55,29 @@ public class Image
         return new Image(Guid.NewGuid(), name, path, createdDateUtc, size, dimensions);
     }
 
-    public void AttachThumbnail(byte[] thumbnailData)
+    public static Image Restore(string name,
+                                string path,
+                                DateTimeOffset createdDateUtc,
+                                FileSize size,
+                                ImageDimensions? dimensions,
+                                ImageBinaryData? thumbnail,
+                                ImageBinaryData? originalData)
     {
-        if (thumbnailData is null || thumbnailData.Length == 0) 
-            throw new ArgumentNullException(nameof(thumbnailData), "Данные для превью не могут быть пустыми.");
+        var image = new Image(Guid.NewGuid(), name, path, createdDateUtc, size, dimensions);
+        image._thumbnail =  thumbnail;
+        image._originalData = originalData;
         
-        _thumbnailData = thumbnailData;
+        return image;
     }
 
-    public void AttachOriginalData(byte[] originalData)
+    public void AttachThumbnail(ImageBinaryData thumbnail)
     {
-        if (originalData is null || originalData.Length == 0)
-            throw new ArgumentNullException(nameof(originalData), "Данные изображения не могут быть пустыми.");
-        
-        _originalData = originalData;
+        _thumbnail = thumbnail ?? throw new ArgumentNullException(nameof(thumbnail));
+    }
+
+    public void AttachOriginalData(ImageBinaryData originalData)
+    {
+        _originalData = originalData ?? throw new ArgumentNullException(nameof(originalData));
     }
 
     public void ReleaseOriginalData() => _originalData = null;

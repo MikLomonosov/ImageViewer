@@ -27,6 +27,16 @@ public sealed class ImageCollection
         return new ImageCollection(Guid.NewGuid(), DateTimeOffset.UtcNow);
     }
 
+    public static ImageCollection Restore(Guid id, DateTimeOffset cratedAtUtc, IEnumerable<Image> images)
+    {
+        var collection = new ImageCollection(id, cratedAtUtc);
+        
+        foreach (var image in images)
+            collection.Add(image);
+        
+        return collection;
+    }
+
     public void Add(Image image)
     {
         if (image is null)
