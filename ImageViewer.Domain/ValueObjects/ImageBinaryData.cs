@@ -14,7 +14,7 @@ public sealed class ImageBinaryData
     
     #endregion
 
-    public static ImageBinaryData Create(byte[] data)
+    public static ImageBinaryData CreateFromBytes(byte[] data)
     {
         if (data is null || data.Length == 0)
             throw new ArgumentNullException(nameof(data), "Данные изображения не могут быть путсыми.");

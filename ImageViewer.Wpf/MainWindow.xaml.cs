@@ -1,13 +1,5 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using ImageViewer.Wpf.ViewModels;
 
 namespace ImageViewer.Wpf;
 
@@ -16,8 +8,11 @@ namespace ImageViewer.Wpf;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(MainViewModel mainViewModel)
     {
         InitializeComponent();
+        // System.Diagnostics.Debug.WriteLine($"[DIAG] DataContext type: {DataContext?.GetType().Name ?? "NULL"}");
+        DataContext = mainViewModel;
+        
     }
 }

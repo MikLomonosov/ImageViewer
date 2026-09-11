@@ -5,14 +5,14 @@ using ImageViewer.Domain.Entities;
 
 namespace ImageViewer.Application.UseCases;
 
-public sealed class LoadImageUseCase
+public sealed class LoadImagesUseCase
 {
     private readonly IFileDialogService _fileDialogService;
     private readonly IImageLoaderService _imageLoaderService;
     
     #region constructors
 
-    public LoadImageUseCase(IFileDialogService fileDialogService, IImageLoaderService imageLoaderService)
+    public LoadImagesUseCase(IFileDialogService fileDialogService, IImageLoaderService imageLoaderService)
     {
         _fileDialogService = fileDialogService;
         _imageLoaderService = imageLoaderService;
@@ -20,14 +20,14 @@ public sealed class LoadImageUseCase
 
     #endregion
 
-    public async Task<ImageLoadResult> ExecuteAsync(ImageCollection collection, CancellationToken cancellationToken)
+    public async Task<ImageLoadResult> ExecuteAsync(ImageCollection collection, CancellationToken cancellationToken=default)
     {
-        var filePath = _fileDialogService.OpenImageFilesDialog();
+        var filePaths = _fileDialogService.OpenImageFilesDialog();
 
-        if (filePath.Count == 0)
+        if (filePaths.Count == 0)
             return new ImageLoadResult(Array.Empty<Image>(), Array.Empty<ImageLoadError>());
 
-        var result = await _imageLoaderService.LoadImagesAsync(filePath, cancellationToken);
+        var result = await _imageLoaderService.LoadImagesAsync(filePaths, cancellationToken);
         collection.AddRange(result.LoadedImages);
 
         return result;

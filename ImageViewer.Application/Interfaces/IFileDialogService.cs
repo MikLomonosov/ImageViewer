@@ -2,5 +2,5 @@ namespace ImageViewer.Application.Interfaces;
 
 public interface IFileDialogService
 {
-    IReadOnlyCollection<string> OpenImageFilesDialog();
+    IReadOnlyList<string> OpenImageFilesDialog();
 }
