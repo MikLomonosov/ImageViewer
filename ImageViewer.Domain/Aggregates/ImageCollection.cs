@@ -22,7 +22,7 @@ public sealed class ImageCollection
     
     #endregion
 
-    public static ImageCollection Create(Guid id, DateTimeOffset cratedAtUtc)
+    public static ImageCollection Create()
     {
         return new ImageCollection(Guid.NewGuid(), DateTimeOffset.UtcNow);
     }
