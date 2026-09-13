@@ -44,6 +44,8 @@ public sealed class ImageCollection
 
         if (_images.Any(existing => existing.Path == image.Path))
             throw new InvalidOperationException($"Изображение с адресом \"{image.Path}\" уже добавлено");
+        
+        _images.Add(image);
     }
 
     public IReadOnlyCollection<Image> AddRange(IEnumerable<Image> images)
@@ -62,6 +64,8 @@ public sealed class ImageCollection
         return added;
     }
 
+    // for the future
+    // also is not used now
     public bool RemoveItem(Guid imageId)
     {
         var image = _images.FirstOrDefault(i => i.Id == imageId);
@@ -79,11 +83,15 @@ public sealed class ImageCollection
         _images.Clear();
     }
 
+    // for the future
+    // also is not used now
     public Image? FindById(Guid id)
     {
         return _images.FirstOrDefault(i => i.Id == id);
     }
 
+    // it was added for clearing list after saving/serializing image collection
+    // but now it is not used, 'cause I think it is unnecessary function
     public void ReleaseAllOriginalData()
     {
         foreach (var image in _images)
