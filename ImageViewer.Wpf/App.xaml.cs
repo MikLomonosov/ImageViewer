@@ -2,7 +2,10 @@
 using ImageViewer.Application.Configuration;
 using ImageViewer.Application.Interfaces;
 using ImageViewer.Application.UseCases;
+using ImageViewer.Domain.Repositories;
 using ImageViewer.Infrastructure.ImageProcessing;
+using ImageViewer.Infrastructure.Repositories;
+using ImageViewer.Infrastructure.Serialization;
 using ImageViewer.Wpf.Converters;
 using ImageViewer.Wpf.Services;
 using ImageViewer.Wpf.ViewModels;
@@ -68,6 +71,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThumbnailService, ThumbnailService>();
         services.AddSingleton<IImageLoaderService, ImageLoaderService>();
+        services.AddSingleton<IImageSerializer, BinaryImageSerializer>();
+        services.AddSingleton<IImageCollectionRepository, ImageCollectionRepository>();
+        services.AddSingleton<SerializeCollectionUseCase>();
+        services.AddSingleton<DeserializeCollectionUseCase>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
     }

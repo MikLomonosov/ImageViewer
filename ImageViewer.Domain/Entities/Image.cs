@@ -13,6 +13,7 @@ public class Image
     public bool HasThumbnail => _thumbnail is not null;
     public bool HasOriginalData => _originalData is not null;
     public ImageBinaryData? Thumbnail => _thumbnail;
+    public ImageBinaryData? OriginalData => _originalData;
     
 
     private ImageBinaryData? _thumbnail;
@@ -55,7 +56,8 @@ public class Image
         return new Image(Guid.NewGuid(), name, path, createdDateUtc, size, dimensions);
     }
 
-    public static Image Restore(string name,
+    public static Image Restore(Guid id,
+                                string name,
                                 string path,
                                 DateTimeOffset createdDateUtc,
                                 FileSize size,
@@ -63,7 +65,7 @@ public class Image
                                 ImageBinaryData? thumbnail,
                                 ImageBinaryData? originalData)
     {
-        var image = new Image(Guid.NewGuid(), name, path, createdDateUtc, size, dimensions);
+        var image = new Image(id, name, path, createdDateUtc, size, dimensions);
         image._thumbnail =  thumbnail;
         image._originalData = originalData;
         
@@ -80,6 +82,8 @@ public class Image
         _originalData = originalData ?? throw new ArgumentNullException(nameof(originalData));
     }
 
+    // it is chained with ImageCollection.ReleaseAllOriginalData()
+    // also it is not used
     public void ReleaseOriginalData() => _originalData = null;
 
     public void SetDimensions(ImageDimensions dimensions)

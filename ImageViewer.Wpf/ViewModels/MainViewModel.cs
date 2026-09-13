@@ -12,11 +12,16 @@ public sealed class MainViewModel : BaseViewModel
 {
     private readonly LoadImagesUseCase _loadImageUseCase;
     private readonly IDialogService _dialogService;
-    private readonly ImageCollection _imageCollection = ImageCollection.Create();
+    private readonly SerializeCollectionUseCase _serializeCollectionUseCase;
+    private readonly DeserializeCollectionUseCase _deserializeCollectionUseCase;
     
     public ObservableCollection<ImageItemViewModel> Images { get; } = new();
+    private ImageCollection _imageCollection = ImageCollection.Create();
     
     public ICommand LoadImagesCommand { get; }
+    public ICommand SerializeCollectionCommand { get; }
+    public ICommand DeserializeCollectionCommand { get; }
+    public ICommand ClearCommand { get; }
     
     private bool _isLoading;
     public bool IsLoading
@@ -27,12 +32,20 @@ public sealed class MainViewModel : BaseViewModel
     
     #region constructors
 
-    public MainViewModel(LoadImagesUseCase loadImageUseCase, IDialogService dialogService)
+    public MainViewModel(LoadImagesUseCase loadImageUseCase, 
+                        IDialogService dialogService,
+                        SerializeCollectionUseCase serializeCollectionUseCase,
+                        DeserializeCollectionUseCase deserializeCollectionUseCase)
     {
         _loadImageUseCase = loadImageUseCase;
         _dialogService = dialogService;
+        _serializeCollectionUseCase = serializeCollectionUseCase;
+        _deserializeCollectionUseCase = deserializeCollectionUseCase;
         
         LoadImagesCommand = new RelayCommand(async () => await LoadImagesAsync(), () => !IsLoading);
+        SerializeCollectionCommand = new RelayCommand(async () => await SerializeAsync(), () => !IsLoading);
+        DeserializeCollectionCommand = new RelayCommand(async () => await DeserializeAsync(), () => !IsLoading);
+        ClearCommand = new RelayCommand(Clear, () => !IsLoading && Images.Count > 0);
     }
     
     #endregion
@@ -60,5 +73,74 @@ public sealed class MainViewModel : BaseViewModel
         {
             IsLoading = false;
         }
+    }
+
+    private async Task SerializeAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var saved = await _serializeCollectionUseCase.ExecuteAsync(_imageCollection);
+
+            if (saved)
+                _dialogService.ShowInfo("Изображения сохранены");
+        }
+        catch (Exception exception)
+        {
+            _dialogService.ShowError($"Иозбражения не удалось сохранить{exception.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task DeserializeAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var loadedCollection = await _deserializeCollectionUseCase.ExecuteAsync();
+
+            if (loadedCollection is null)
+                return;
+
+            _imageCollection = loadedCollection;
+            
+            
+            if (Images.Count != 0)
+                Images.Clear();
+
+            foreach (var image in _imageCollection.Images)
+            {
+                Images.Add(new ImageItemViewModel(image));
+            }
+        }
+        catch (Exception exception)
+        {
+            _dialogService.ShowError($"Не удалось загрузить изображения {exception.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void Clear()
+    {
+        if (Images.Count == 0)
+            return;
+
+        var confirmed = _dialogService.Confirm(
+            "Несохраненные изображения будут потеряны. /n Очистить список изображений?",
+            "Очистка списка изображений.");
+
+        if (!confirmed)
+            return;
+        
+        _imageCollection.Clear();
+        Images.Clear();
     }
 }

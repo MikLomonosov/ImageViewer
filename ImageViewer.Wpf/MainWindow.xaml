@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ImageViewer.Wpf"
         xmlns:vm="clr-namespace:ImageViewer.Wpf.ViewModels"
         mc:Ignorable="d"
-        Title="ImageViewer" Height="600" Width="900">
+        Title="ImageViewer" Height="600" Width="600">
     
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -15,10 +15,55 @@
         </Grid.RowDefinitions>
         
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-            <Button Content="Загрузить изображения"
-                    Command="{Binding LoadImagesCommand}"
+            <Button Command="{Binding LoadImagesCommand}"
                     Padding="12,6"
-                    Cursor="Hand"/>
+                    Cursor="Hand"
+                    Margin="0 0 10 0"
+                    Height="50"
+                    Width="110"
+                    Background="#6200EE">
+                <TextBlock Text="Загрузить изображения"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="#FFFFFF"/>
+            </Button>
+            <Button Command="{Binding SerializeCollectionCommand}"
+                    Padding="12,6"
+                    Cursor="Hand"
+                    Margin="0 0 10 0"
+                    Height="50"
+                    Width="110"
+                    Background="#E2EAE4">
+                <TextBlock Text="Сохранить в файл"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="#1C2E24"/>
+            </Button>
+            <Button Command="{Binding DeserializeCollectionCommand}"
+                    Padding="12,6"
+                    Cursor="Hand"
+                    Margin="0 0 10 0"
+                    Height="50"
+                    Width="110"
+                    Background="#28A745">
+                <TextBlock Text="Открыть из файла"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="#FFFFFF"/>
+            </Button>
+            <Button Command="{Binding ClearCommand}"
+                    Padding="12,6"
+                    Cursor="Hand"
+                    Margin="0 0 10 0"
+                    Height="50"
+                    Width="110"
+                    Background="#DC3545">
+                <TextBlock Text="Очистить список"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="White"/>
+            </Button>
+            
             
             <TextBlock Text="Загрузка..."
                        VerticalAlignment="Center"
