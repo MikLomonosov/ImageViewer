@@ -1,6 +1,6 @@
 namespace ImageViewer.Domain.ValueObjects;
 
-public sealed class FileSize
+public record FileSize
 {
     public long Bytes { get;  }
     public double Kilobytes => Bytes / 1024.0;
@@ -9,7 +9,7 @@ public sealed class FileSize
     
     #region constructors
     
-    public FileSize(long bytes)
+    private FileSize(long bytes)
     {
         Bytes = bytes;
     }
@@ -21,21 +21,6 @@ public sealed class FileSize
         return bytes < 0 
             ? throw new ArgumentOutOfRangeException(nameof(bytes), "Размер файла не можем быть отрицательным!") 
             : new FileSize(bytes);
-    }
-
-    public bool Equals(FileSize? other)
-    {
-        return other is not null && Bytes == other.Bytes;
-    }
-
-    public override bool Equals(object? other)
-    {
-        return Equals(other as FileSize);
-    }
-
-    public override int GetHashCode()
-    {
-        return Bytes.GetHashCode();
     }
     
     public override string ToString()

@@ -11,9 +11,9 @@ public class ThumbnailService : IThumbnailService
 {
     public ImageBinaryData CreateThumbnail(ImageBinaryData originalImageData, int maxWidth = 200)
     {
-        var bytes = originalImageData.ToArray();
+        // var bytes = originalImageData.ToArray();
         
-        using var inputStream = new MemoryStream(bytes);
+        using var inputStream = originalImageData.OpenRead();
 
         var decoder = BitmapDecoder.Create(inputStream,
                                             BitmapCreateOptions.None,

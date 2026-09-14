@@ -9,6 +9,6 @@ public sealed class ImageDto
     public DateTimeOffset CreatedDateUtc { get; set; }
     public int? Width { get; set; }
     public int? Height { get; set; }
-    public byte[]? Thumbnail { get; set; }
-    public byte[]? OriginalData { get; set; }
+    public ReadOnlyMemory<byte>? Thumbnail { get; set; }
+    public ReadOnlyMemory<byte>? OriginalData { get; set; }
 }

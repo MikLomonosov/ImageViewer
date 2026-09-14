@@ -1,10 +1,10 @@
+using ImageViewer.Domain.Common;
 using ImageViewer.Domain.ValueObjects;
 
 namespace ImageViewer.Domain.Entities;
 
-public class Image
+public sealed class Image : Entity<Guid>
 {
-    public Guid Id { get; }
     public string Name { get; private set; }
     public string Path { get; private set; }
     public DateTimeOffset CreatedDateUtc { get; private set; }
@@ -26,9 +26,8 @@ public class Image
                     string path,
                     DateTimeOffset createdDateUtc,
                     FileSize size,
-                    ImageDimensions? dimensions)
+                    ImageDimensions? dimensions) :  base(id)
     {
-        Id = id;
         Name = name;
         Path = path;
         CreatedDateUtc = createdDateUtc;
@@ -81,20 +80,4 @@ public class Image
     {
         _originalData = originalData ?? throw new ArgumentNullException(nameof(originalData));
     }
-
-    // it is chained with ImageCollection.ReleaseAllOriginalData()
-    // also it is not used
-    public void ReleaseOriginalData() => _originalData = null;
-
-    public void SetDimensions(ImageDimensions dimensions)
-    {
-        Dimensions = dimensions ?? throw new ArgumentNullException(nameof(dimensions), "Размеры изображения не могут быть пустыми");
-    }
-
-    public override bool Equals(object? other)
-    {
-        return other is Image otherImage && Id == otherImage.Id;
-    }
-
-    public override int GetHashCode() => Id.GetHashCode();
 }

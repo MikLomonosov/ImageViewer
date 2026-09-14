@@ -42,9 +42,12 @@ public sealed class MainViewModel : BaseViewModel
         _serializeCollectionUseCase = serializeCollectionUseCase;
         _deserializeCollectionUseCase = deserializeCollectionUseCase;
         
-        LoadImagesCommand = new RelayCommand(async () => await LoadImagesAsync(), () => !IsLoading);
-        SerializeCollectionCommand = new RelayCommand(async () => await SerializeAsync(), () => !IsLoading);
-        DeserializeCollectionCommand = new RelayCommand(async () => await DeserializeAsync(), () => !IsLoading);
+        LoadImagesCommand = new RelayCommand(async () => await RunBusyAsync(LoadImagesAsync),
+            () => !IsLoading);
+        SerializeCollectionCommand = new RelayCommand(async () => await RunBusyAsync(SerializeAsync),
+            () => !IsLoading &&  Images.Count > 0);
+        DeserializeCollectionCommand = new RelayCommand(async () => await RunBusyAsync(DeserializeAsync), 
+            () => !IsLoading);
         ClearCommand = new RelayCommand(Clear, () => !IsLoading && Images.Count > 0);
     }
     
@@ -52,26 +55,16 @@ public sealed class MainViewModel : BaseViewModel
 
     private async Task LoadImagesAsync()
     {
-        IsLoading = true;
-
-        try
-        {
-            var result = await _loadImageUseCase.ExecuteAsync(_imageCollection);
+        var result = await _loadImageUseCase.ExecuteAsync(_imageCollection);
             
-            foreach (var image in result.LoadedImages) 
-                Images.Add(new ImageItemViewModel(image));
+        foreach (var image in result.LoadedImages) 
+            Images.Add(new ImageItemViewModel(image));
 
-            if (result.Errors.Count > 0)
-            {
-                var message = string.Join(Environment.NewLine, 
-                    result.Errors.Select(e => $"{Path.GetFileName(e.FilePath)}: {e.Reason}"));
-                _dialogService.ShowWarning($"Не удалось загрузить некоторые файлы: {Environment.NewLine}{message}");
-            }
-                
-        }
-        finally
+        if (result.Errors.Count > 0)
         {
-            IsLoading = false;
+            var message = string.Join(Environment.NewLine, 
+                result.Errors.Select(e => $"{Path.GetFileName(e.FilePath)}: {e.Reason}"));
+            _dialogService.ShowWarning($"Не удалось загрузить некоторые файлы: {Environment.NewLine}{message}");
         }
     }
 
@@ -142,5 +135,37 @@ public sealed class MainViewModel : BaseViewModel
         
         _imageCollection.Clear();
         Images.Clear();
+    }
+
+    private async Task RunBusyAsync(Func<Task> work)
+    {
+        IsLoading = true;
+
+        try
+        {
+            await work();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task RunBusyAsync(Func<Task> work, string errorMessagePrefix)
+    {
+        IsLoading =  true;
+
+        try
+        {
+            await work();
+        }
+        catch (Exception exception)
+        {
+            _dialogService.ShowError($"{errorMessagePrefix}: {exception.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System.IO;
-using ImageViewer.Application.DTO;
 using ImageViewer.Application.Interfaces;
 using ImageViewer.Application.Mapping;
 using ImageViewer.Domain.Aggregates;
@@ -10,6 +9,7 @@ namespace ImageViewer.Infrastructure.Repositories;
 public class ImageCollectionRepository : IImageCollectionRepository
 {
     private readonly IReadOnlyList<IImageSerializer> _serializers;
+    private const int StreamBufferSizeBytes = 81920; // 80 kb
     
     #region constructors
 
@@ -24,21 +24,14 @@ public class ImageCollectionRepository : IImageCollectionRepository
     #endregion
     
     public async Task SaveAsync(ImageCollection imageCollection,
-                            string filePath,
-                            CancellationToken cancellationToken = default)
+                                string filePath,
+                                CancellationToken cancellationToken = default)
     {
         var serializer = ResolveSerializer(filePath);
-
-        var imageCollectionDto = new ImageCollectionDto()
-        {
-            Id = imageCollection.Id,
-            CreatedDateUtc = imageCollection.CratedAtUtc,
-            Images = imageCollection.Images.Select(ImageMapper.ToDto).ToList()
-        };
         
-        await using var stream = new FileStream(filePath, FileMode.Create,
-                                                FileAccess.Write, FileShare.None,
-                                                bufferSize: 81920, useAsync:true);
+        var imageCollectionDto = ImageMapper.ToDto(imageCollection);
+        
+        await using var stream = OpenStream(filePath, FileAccess.Write);
         
         await serializer.SerializeAsync(imageCollectionDto, stream, cancellationToken);
     }
@@ -50,9 +43,7 @@ public class ImageCollectionRepository : IImageCollectionRepository
 
         var serializer = ResolveSerializer(filePath);
 
-        await using var stream = new FileStream(filePath, FileMode.Open,
-                                                FileAccess.Read, FileShare.Read,
-                                                bufferSize: 81920, useAsync: true);
+        await using var stream = OpenStream(filePath, FileAccess.Read);
 
         var imageCollection = await serializer.DeserializeAsync(stream, cancellationToken);
         
@@ -68,5 +59,18 @@ public class ImageCollectionRepository : IImageCollectionRepository
         return _serializers.FirstOrDefault(s => 
                                             string.Equals(s.FileExtension, extension, StringComparison.OrdinalIgnoreCase))
                                             ?? _serializers[0]; // fallback
+    }
+
+    private static FileStream OpenStream(string filePath, FileAccess access)
+    {
+        var mode = access == FileAccess.Write ? FileMode.Create : FileMode.Open;
+        var share = access == FileAccess.Write ? FileShare.None : FileShare.Read;
+        
+        return new FileStream(filePath, 
+                                mode, 
+                                access, 
+                                share,
+                                bufferSize: StreamBufferSizeBytes,
+                                useAsync:true);
     }
 }

@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace ImageViewer.Domain.ValueObjects;
 
 public sealed class ImageBinaryData
@@ -23,12 +25,19 @@ public sealed class ImageBinaryData
     }
     
     public byte[] ToArray() => (byte[])_data.Clone();
+    public ReadOnlyMemory<byte> AsMemory() => _data;
+    public ReadOnlySpan<byte> AsSpan() => _data;
+    public Stream OpenRead() => new MemoryStream(_data,
+                                            0,
+                                            _data.Length,
+                                            writable: false,
+                                            publiclyVisible:false);
 
     public bool Equals(ImageBinaryData? other)
     {
         return other is not null && _data.AsSpan().SequenceEqual(other._data);
     }
-
+    
     public override bool Equals(object? other)
     {
         return Equals(other as ImageBinaryData);

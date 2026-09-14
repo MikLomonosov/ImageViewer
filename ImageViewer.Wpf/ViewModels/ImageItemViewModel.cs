@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows.Media.Imaging;
 using ImageViewer.Domain.Entities;
+using ImageViewer.Domain.ValueObjects;
 using ImageViewer.Wpf.ViewModels.Base;
 
 namespace ImageViewer.Wpf.ViewModels;
@@ -23,7 +24,7 @@ public sealed class ImageItemViewModel : BaseViewModel
         get
         {
             if (_thumbnailSource is null && _image.Thumbnail is not null)
-                _thumbnailSource = CreateBitmapImage(_image.Thumbnail.ToArray());
+                _thumbnailSource = CreateBitmapImage(_image.Thumbnail);
             
             return _thumbnailSource;
         }
@@ -44,11 +45,11 @@ public sealed class ImageItemViewModel : BaseViewModel
     
     #endregion
 
-    private static BitmapImage CreateBitmapImage(byte[] bytes)
+    private static BitmapImage CreateBitmapImage(ImageBinaryData imageBinaryData)
     {
         var image = new BitmapImage();
         
-        using var stream = new MemoryStream(bytes);
+        using var stream = imageBinaryData.OpenRead();
         
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad; // load to memory and close the stream
