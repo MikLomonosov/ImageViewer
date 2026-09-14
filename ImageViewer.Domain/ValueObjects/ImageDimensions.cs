@@ -1,10 +1,9 @@
 namespace ImageViewer.Domain.ValueObjects;
 
-public record ImageDimensions : IEquatable<ImageDimensions>
+public record ImageDimensions
 {
     public int Width { get; }
     public int Height { get; }
-    
     
     #region constructors
     

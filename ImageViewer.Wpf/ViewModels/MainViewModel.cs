@@ -42,11 +42,13 @@ public sealed class MainViewModel : BaseViewModel
         _serializeCollectionUseCase = serializeCollectionUseCase;
         _deserializeCollectionUseCase = deserializeCollectionUseCase;
         
-        LoadImagesCommand = new RelayCommand(async () => await RunBusyAsync(LoadImagesAsync),
+        LoadImagesCommand = new RelayCommand(() => RunBusyAsync(LoadImagesAsync),
             () => !IsLoading);
-        SerializeCollectionCommand = new RelayCommand(async () => await RunBusyAsync(SerializeAsync),
+        SerializeCollectionCommand = new RelayCommand( 
+            () => RunBusyAsync(SerializeAsync, "Не удалось сохранить изображения"),
             () => !IsLoading &&  Images.Count > 0);
-        DeserializeCollectionCommand = new RelayCommand(async () => await RunBusyAsync(DeserializeAsync), 
+        DeserializeCollectionCommand = new RelayCommand( 
+            () =>  RunBusyAsync(DeserializeAsync, "Не удалось загрузить изображения"), 
             () => !IsLoading);
         ClearCommand = new RelayCommand(Clear, () => !IsLoading && Images.Count > 0);
     }
@@ -70,55 +72,38 @@ public sealed class MainViewModel : BaseViewModel
 
     private async Task SerializeAsync()
     {
-        IsLoading = true;
+        var result =  await _serializeCollectionUseCase.ExecuteAsync(_imageCollection);
+        
+        if (!result.Saved)
+            return;
 
-        try
+        if (result.SkippedOriginalPaths.Count > 0)
         {
-            var saved = await _serializeCollectionUseCase.ExecuteAsync(_imageCollection);
-
-            if (saved)
-                _dialogService.ShowInfo("Изображения сохранены");
+            var names = string.Join(Environment.NewLine,
+                result.SkippedOriginalPaths.Select(Path.GetFileName));
+            
+            _dialogService.ShowWarning($"Изображения сохранены, но у некоторых из них " + 
+                $"оригиналы данных не удалось прочитать (был удален или перемещен): {Environment.NewLine}{names}");
         }
-        catch (Exception exception)
+        else
         {
-            _dialogService.ShowError($"Иозбражения не удалось сохранить{exception.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
+            _dialogService.ShowInfo("Изображения успешно сохранены");
         }
     }
 
     private async Task DeserializeAsync()
     {
-        IsLoading = true;
+        var loadedCollection = await _deserializeCollectionUseCase.ExecuteAsync();
 
-        try
-        {
-            var loadedCollection = await _deserializeCollectionUseCase.ExecuteAsync();
+        if (loadedCollection is null)
+            return;
 
-            if (loadedCollection is null)
-                return;
+        _imageCollection = loadedCollection;
+        
+        Images.Clear();
 
-            _imageCollection = loadedCollection;
-            
-            
-            if (Images.Count != 0)
-                Images.Clear();
-
-            foreach (var image in _imageCollection.Images)
-            {
-                Images.Add(new ImageItemViewModel(image));
-            }
-        }
-        catch (Exception exception)
-        {
-            _dialogService.ShowError($"Не удалось загрузить изображения {exception.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        foreach (var image in _imageCollection.Images)
+            Images.Add(new ImageItemViewModel(image));
     }
 
     private void Clear()
@@ -127,7 +112,8 @@ public sealed class MainViewModel : BaseViewModel
             return;
 
         var confirmed = _dialogService.Confirm(
-            "Несохраненные изображения будут потеряны. /n Очистить список изображений?",
+            "Несохраненные изображения будут потеряны."+
+            $"Очистить список изображений?: {Environment.NewLine}",
             "Очистка списка изображений.");
 
         if (!confirmed)
@@ -137,21 +123,7 @@ public sealed class MainViewModel : BaseViewModel
         Images.Clear();
     }
 
-    private async Task RunBusyAsync(Func<Task> work)
-    {
-        IsLoading = true;
-
-        try
-        {
-            await work();
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task RunBusyAsync(Func<Task> work, string errorMessagePrefix)
+    private async Task RunBusyAsync(Func<Task> work, string? errorMessagePrefix = null)
     {
         IsLoading =  true;
 

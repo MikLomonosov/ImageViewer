@@ -17,23 +17,42 @@ public class ImageCollectionRepository : IImageCollectionRepository
     {
         _serializers = serializers.ToList();
         
-        if (serializers.Count() == 0)
+        if (_serializers.Count == 0)
             throw new InvalidOperationException("Нет ни одного сериализатора");
     }
     
     #endregion
     
-    public async Task SaveAsync(ImageCollection imageCollection,
-                                string filePath,
-                                CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<string>> SaveAsync(ImageCollection imageCollection,
+                                                        string filePath,
+                                                        CancellationToken cancellationToken = default)
     {
         var serializer = ResolveSerializer(filePath);
-        
+        var skippedSourcePaths = new List<string>();
         var imageCollectionDto = ImageMapper.ToDto(imageCollection);
+
+        foreach (var imageDto in imageCollectionDto.Images)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            if (imageDto.OriginalData is not null)
+                continue;
+
+            try
+            {
+                imageDto.OriginalData = await File.ReadAllBytesAsync(imageDto.Path, cancellationToken);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                skippedSourcePaths.Add(imageDto.Path);
+            }
+        }
         
         await using var stream = OpenStream(filePath, FileAccess.Write);
         
         await serializer.SerializeAsync(imageCollectionDto, stream, cancellationToken);
+        
+        return skippedSourcePaths;
     }
 
     public async Task<ImageCollection> LoadAsync(string filePath, CancellationToken cancellationToken = default)
@@ -47,9 +66,7 @@ public class ImageCollectionRepository : IImageCollectionRepository
 
         var imageCollection = await serializer.DeserializeAsync(stream, cancellationToken);
         
-        var iamges = imageCollection.Images.Select(ImageMapper.ToDomain);
-        
-        return ImageCollection.Restore(imageCollection.Id, imageCollection.CreatedDateUtc,  iamges);
+        return ImageMapper.ToDomain(imageCollection);
     }
 
     private IImageSerializer ResolveSerializer(string filePath)
