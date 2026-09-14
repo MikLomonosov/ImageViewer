@@ -21,7 +21,7 @@
                     Margin="0 0 10 0"
                     Height="50"
                     Width="110"
-                    Background="#6200EE">
+                    Background="#1A73E8">
                 <TextBlock Text="Загрузить изображения"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
@@ -110,6 +110,7 @@
                                 <TextBlock Text="{Binding SizeFormatted}" Opacity="0.7" />
                                 <TextBlock Text="{Binding CreatedDateFormatted}" Opacity="0.7" />
                                 <TextBlock Text="{Binding DimensionsFormatted}" Opacity="0.7" />
+                                <TextBlock Text="{Binding Path}" Opacity="0.7" />
                             </StackPanel>
                         </Grid>
                     </Border>

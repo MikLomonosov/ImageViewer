@@ -91,15 +91,15 @@ public class BinaryImageSerializer : IImageSerializer
         return Task.FromResult(imageCollection);
     }
 
-    private static void WriteNullableBytes(BinaryWriter writer, byte[]? data)
+    private static void WriteNullableBytes(BinaryWriter writer, ReadOnlyMemory<byte>? data)
     {
         writer.Write(data is not null);
 
         if (data is null)
             return;
         
-        writer.Write(data.Length);
-        writer.Write(data);
+        writer.Write(data.Value.Length);
+        writer.Write(data.Value.Span);
     }
 
     private static byte[]? ReadNullableBytes(BinaryReader reader)

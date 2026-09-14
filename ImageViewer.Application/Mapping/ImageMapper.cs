@@ -1,4 +1,5 @@
 using ImageViewer.Application.DTO;
+using ImageViewer.Domain.Aggregates;
 using ImageViewer.Domain.Entities;
 using ImageViewer.Domain.ValueObjects;
 
@@ -17,8 +18,8 @@ public class ImageMapper
             CreatedDateUtc = image.CreatedDateUtc,
             Width = image.Dimensions?.Width,
             Height = image.Dimensions?.Height,
-            Thumbnail = image.Thumbnail?.ToArray(),
-            OriginalData = image.OriginalData?.ToArray()
+            Thumbnail = image.Thumbnail?.AsMemory(),
+            OriginalData = image.OriginalData?.AsMemory()
         };
     }
 
@@ -28,16 +29,31 @@ public class ImageMapper
             ? ImageDimensions.Create(dto.Width.Value, dto.Height.Value)
             : null;
         
-        var thumbnail = dto.Thumbnail is not null ? ImageBinaryData.CreateFromBytes(dto.Thumbnail) : null;
-        var originalData = dto.OriginalData is not null ? ImageBinaryData.CreateFromBytes(dto.OriginalData) : null;
+        var thumbnail = dto.Thumbnail is {  } t ? ImageBinaryData.CreateFromBytes(t.ToArray()) 
+            : null;
+        var originalData = dto.OriginalData is { } o ? ImageBinaryData.CreateFromBytes(o.ToArray()) 
+            : null;
         
         return Image.Restore(dto.Id,
-            dto.Name,
-            dto.Path,
-            dto.CreatedDateUtc,
-            FileSize.FromBytes(dto.Size),
-            dimensions,
-            thumbnail,
-            originalData);
+                            dto.Name,
+                            dto.Path,
+                            dto.CreatedDateUtc,
+                            FileSize.FromBytes(dto.Size),
+                            dimensions,
+                            thumbnail,
+                            originalData);
     }
+
+    public static ImageCollectionDto ToDto(ImageCollection imageCollection)
+    {
+        return new ImageCollectionDto
+        {
+            Id = imageCollection.Id,
+            CreatedDateUtc = imageCollection.CratedAtUtc,
+            Images = imageCollection.Images.Select(ToDto).ToList()
+        };
+    }
+
+    public static ImageCollection ToDomain(ImageCollectionDto dto) => 
+        ImageCollection.Restore(dto.Id, dto.CreatedDateUtc, dto.Images.Select(ToDomain));
 }

@@ -1,22 +1,22 @@
+using ImageViewer.Domain.Common;
 using ImageViewer.Domain.Entities;
 
 namespace ImageViewer.Domain.Aggregates;
 
-public sealed class ImageCollection
+public sealed class ImageCollection : Entity<Guid>
 {
-    public Guid Id { get; }
     public DateTimeOffset CratedAtUtc { get; }
 
     private readonly List<Image> _images = new();
     
     public IReadOnlyList<Image> Images => _images.AsReadOnly();
     public int Count => _images.Count;
+    private readonly HashSet<string> _sourcePaths = new (StringComparer.OrdinalIgnoreCase);
     
     #region constructors
 
-    private ImageCollection(Guid id, DateTimeOffset cratedAtUtc)
+    private ImageCollection(Guid id, DateTimeOffset cratedAtUtc) : base(id)
     {
-        Id = id;
         CratedAtUtc = cratedAtUtc;
     }
     
@@ -36,13 +36,13 @@ public sealed class ImageCollection
         
         return collection;
     }
-
+    
     public void Add(Image image)
     {
         if (image is null)
             throw new ArgumentNullException(nameof(image), "Изображение не может быть пустым.");
 
-        if (_images.Any(existing => existing.Path == image.Path))
+        if (!_sourcePaths.Add(image.Path))
             throw new InvalidOperationException($"Изображение с адресом \"{image.Path}\" уже добавлено");
         
         _images.Add(image);
@@ -54,7 +54,7 @@ public sealed class ImageCollection
 
         foreach (var image in images)
         {
-            if (_images.Any(existing => existing.Path == image.Path))
+            if (!_sourcePaths.Add(image.Path))
                 continue;
             
             _images.Add(image);
@@ -63,45 +63,10 @@ public sealed class ImageCollection
 
         return added;
     }
-
-    // for the future
-    // also is not used now
-    public bool RemoveItem(Guid imageId)
-    {
-        var image = _images.FirstOrDefault(i => i.Id == imageId);
-
-        if (image is null)
-            return false;
-        
-        _images.Remove(image);
-        
-        return true;
-    }
-
+    
     public void Clear()
     {
         _images.Clear();
+        _sourcePaths.Clear();
     }
-
-    // for the future
-    // also is not used now
-    public Image? FindById(Guid id)
-    {
-        return _images.FirstOrDefault(i => i.Id == id);
-    }
-
-    // it was added for clearing list after saving/serializing image collection
-    // but now it is not used, 'cause I think it is unnecessary function
-    public void ReleaseAllOriginalData()
-    {
-        foreach (var image in _images)
-            image.ReleaseOriginalData();
-    }
-
-    public override bool Equals(object? other)
-    {
-        return other is ImageCollection otherImageCollection && Id.Equals(otherImageCollection.Id);
-    }
-    
-    public override int GetHashCode() => Id.GetHashCode();
 }
