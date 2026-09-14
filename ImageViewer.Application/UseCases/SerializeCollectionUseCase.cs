@@ -1,4 +1,5 @@
 using ImageViewer.Application.Interfaces;
+using ImageViewer.Application.Models;
 using ImageViewer.Domain.Aggregates;
 using ImageViewer.Domain.Repositories;
 
@@ -20,17 +21,17 @@ public class SerializeCollectionUseCase
     
     #endregion
 
-    public async Task<bool> ExecuteAsync(ImageCollection imageCollection, CancellationToken cancellationToken = default)
+    public async Task<SerializeResult> ExecuteAsync(ImageCollection imageCollection, CancellationToken cancellationToken = default)
     {
         var filePath = _fileDialogService.SaveDocumentDialog(
             fileName: $"collection_{DateTime.UtcNow:ddMMyyyy_HHmmss}.imgcollection",
             filter: "Файлы коллекции |*.imgcollection|Все файлы|*.*");
 
         if (filePath is null)
-            return false;
+            return new SerializeResult(false, Array.Empty<string>());
 
-        await _imageCollectionRepository.SaveAsync(imageCollection, filePath, cancellationToken);
+        var skipped = await _imageCollectionRepository.SaveAsync(imageCollection, filePath, cancellationToken);
         
-        return true;
+        return new SerializeResult(true, skipped);
     }
 }

@@ -1,6 +1,6 @@
 namespace ImageViewer.Domain.Common;
 
-public abstract class Entity<TId> : IEquatable<TId> where TId : notnull
+public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
 {
     public TId Id { get; }
 
@@ -13,9 +13,9 @@ public abstract class Entity<TId> : IEquatable<TId> where TId : notnull
 
     #endregion
 
-    public bool Equals(TId? other)
+    public bool Equals(Entity<TId>? other)
     {
-        return other is not null && (ReferenceEquals(this, other) || Id.Equals(other));
+        return other is not null && other.GetType() == GetType() && Id.Equals(other.Id);
     }
 
     public override bool Equals(object? obj)

@@ -64,13 +64,10 @@ public partial class App : System.Windows.Application
         });
         
         services.AddSingleton<IImageLoaderService, ImageLoaderService>();
-
         services.AddSingleton<LoadImagesUseCase>();
-
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThumbnailService, ThumbnailService>();
-        services.AddSingleton<IImageLoaderService, ImageLoaderService>();
         services.AddSingleton<IImageSerializer, BinaryImageSerializer>();
         services.AddSingleton<IImageCollectionRepository, ImageCollectionRepository>();
         services.AddSingleton<SerializeCollectionUseCase>();

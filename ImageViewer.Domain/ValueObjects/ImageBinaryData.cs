@@ -4,7 +4,6 @@ namespace ImageViewer.Domain.ValueObjects;
 
 public sealed class ImageBinaryData
 {
-    public int LengthBytes => _data.Length;
     private readonly byte[] _data;
     
     #region constructors
@@ -26,7 +25,6 @@ public sealed class ImageBinaryData
     
     public byte[] ToArray() => (byte[])_data.Clone();
     public ReadOnlyMemory<byte> AsMemory() => _data;
-    public ReadOnlySpan<byte> AsSpan() => _data;
     public Stream OpenRead() => new MemoryStream(_data,
                                             0,
                                             _data.Length,

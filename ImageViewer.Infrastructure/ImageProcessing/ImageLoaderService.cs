@@ -88,11 +88,8 @@ public class ImageLoaderService : IImageLoaderService
                                     createdAtUtc,
                                     FileSize.FromBytes(fileInfo.Length),
                                     dimensions);
-            
-            var originalImageData = ImageBinaryData.CreateFromBytes(bytes);
-            image.AttachOriginalData(originalImageData);
 
-            var thumbnailData = _thumbnailService.CreateThumbnail(originalImageData);
+            var thumbnailData = _thumbnailService.CreateThumbnail(ImageBinaryData.CreateFromBytes(bytes));
             image.AttachThumbnail(thumbnailData);
 
             return (image, null);

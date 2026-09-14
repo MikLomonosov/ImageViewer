@@ -102,7 +102,7 @@ public class BinaryImageSerializer : IImageSerializer
         writer.Write(data.Value.Span);
     }
 
-    private static byte[]? ReadNullableBytes(BinaryReader reader)
+    private static ReadOnlyMemory<byte>? ReadNullableBytes(BinaryReader reader)
     {
         if (!reader.ReadBoolean())
             return null;
