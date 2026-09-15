@@ -4,5 +4,5 @@ namespace ImageViewer.Application.Interfaces;
 
 public interface IThumbnailService
 {
-    ImageBinaryData CreateThumbnail(ImageBinaryData originalImageData, int maxWidth = 200);
+    (ImageDimensions Dimensions, ImageBinaryData ThumbnailData)? DecodeAndCreateThumbnail(byte[] originalData, int maxWidth = 200);
 }

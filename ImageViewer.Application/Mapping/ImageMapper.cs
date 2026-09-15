@@ -5,7 +5,7 @@ using ImageViewer.Domain.ValueObjects;
 
 namespace ImageViewer.Application.Mapping;
 
-public class ImageMapper
+public static class ImageMapper
 {
     public static ImageDto ToDto(Image image)
     {
