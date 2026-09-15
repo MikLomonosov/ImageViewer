@@ -32,7 +32,7 @@ public sealed class ImageCollection : Entity<Guid>
         var collection = new ImageCollection(id, cratedAtUtc);
         
         foreach (var image in images)
-            collection.Add(image);
+            collection.AddWithoutValidation(image);
         
         return collection;
     }
@@ -68,5 +68,11 @@ public sealed class ImageCollection : Entity<Guid>
     {
         _images.Clear();
         _sourcePaths.Clear();
+    }
+
+    private void AddWithoutValidation(Image image)
+    {
+        _images.Add(image);
+        _sourcePaths.Add(image.Path);
     }
 }

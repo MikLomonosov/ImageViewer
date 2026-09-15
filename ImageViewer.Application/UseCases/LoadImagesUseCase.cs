@@ -7,23 +7,21 @@ namespace ImageViewer.Application.UseCases;
 
 public sealed class LoadImagesUseCase
 {
-    private readonly IFileDialogService _fileDialogService;
     private readonly IImageLoaderService _imageLoaderService;
     
     #region constructors
 
-    public LoadImagesUseCase(IFileDialogService fileDialogService, IImageLoaderService imageLoaderService)
+    public LoadImagesUseCase(IImageLoaderService imageLoaderService)
     {
-        _fileDialogService = fileDialogService;
         _imageLoaderService = imageLoaderService;
     }
 
     #endregion
 
-    public async Task<ImageLoadResult> ExecuteAsync(ImageCollection collection, CancellationToken cancellationToken=default)
+    public async Task<ImageLoadResult> ExecuteAsync(ImageCollection collection,
+                                                    IReadOnlyList<string> filePaths,
+                                                    CancellationToken cancellationToken=default)
     {
-        var filePaths = _fileDialogService.OpenImageFilesDialog();
-
         if (filePaths.Count == 0)
             return new ImageLoadResult(Array.Empty<Image>(), Array.Empty<ImageLoadError>());
 

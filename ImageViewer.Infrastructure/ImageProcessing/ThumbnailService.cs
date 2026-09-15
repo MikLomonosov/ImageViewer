@@ -8,29 +8,31 @@ namespace ImageViewer.Infrastructure.ImageProcessing;
 
 public class ThumbnailService : IThumbnailService
 {
-    public ImageBinaryData CreateThumbnail(ImageBinaryData originalImageData, int maxWidth = 200)
+    public (ImageDimensions Dimensions, ImageBinaryData ThumbnailData)? DecodeAndCreateThumbnail(byte[] originalData, int maxWidth = 200)
     {
-        // var bytes = originalImageData.ToArray();
-        
-        using var inputStream = originalImageData.OpenRead();
+        try
+        {
+            using var stream = new MemoryStream(originalData);
 
-        var decoder = BitmapDecoder.Create(inputStream,
-                                            BitmapCreateOptions.None,
-                                            BitmapCacheOption.OnLoad);
-        
-        var frame = decoder.Frames[0];
-        
-        var scale = (double)maxWidth / frame.PixelWidth;
-        
-        var thumbnail = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
-        thumbnail.Freeze();
+            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+            var frame = decoder.Frames[0];
+            var dimensions = ImageDimensions.Create(frame.PixelWidth, frame.PixelHeight);
+            var scale = Math.Min(1.0, (double)maxWidth / frame.PixelWidth);
 
-        var encoder = new JpegBitmapEncoder { QualityLevel = 80 };
-        encoder.Frames.Add(BitmapFrame.Create(thumbnail));
+            var thumbnail = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
+            thumbnail.Freeze();
 
-        using var outputStream = new MemoryStream();
-        encoder.Save(outputStream);
-        
-        return ImageBinaryData.CreateFromBytes(outputStream.ToArray());
+            var encoder = new JpegBitmapEncoder { QualityLevel = 80 };
+            encoder.Frames.Add(BitmapFrame.Create(thumbnail));
+
+            using var outputStream = new MemoryStream();
+            encoder.Save(outputStream);
+
+            return (dimensions, ImageBinaryData.CreateFromBytes(outputStream.ToArray()));
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

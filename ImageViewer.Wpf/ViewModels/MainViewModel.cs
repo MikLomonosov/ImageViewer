@@ -14,6 +14,8 @@ public sealed class MainViewModel : BaseViewModel
     private readonly IDialogService _dialogService;
     private readonly SerializeCollectionUseCase _serializeCollectionUseCase;
     private readonly DeserializeCollectionUseCase _deserializeCollectionUseCase;
+    private readonly IFileDialogService _fileDialogService;
+    private const string CollectionFileFilter = "Файлы коллекции|*.imgcollection|Все файлы|*.*";
     
     public ObservableCollection<ImageItemViewModel> Images { get; } = new();
     private ImageCollection _imageCollection = ImageCollection.Create();
@@ -34,6 +36,7 @@ public sealed class MainViewModel : BaseViewModel
 
     public MainViewModel(LoadImagesUseCase loadImageUseCase, 
                         IDialogService dialogService,
+                        IFileDialogService fileDialogService,
                         SerializeCollectionUseCase serializeCollectionUseCase,
                         DeserializeCollectionUseCase deserializeCollectionUseCase)
     {
@@ -41,6 +44,7 @@ public sealed class MainViewModel : BaseViewModel
         _dialogService = dialogService;
         _serializeCollectionUseCase = serializeCollectionUseCase;
         _deserializeCollectionUseCase = deserializeCollectionUseCase;
+        _fileDialogService = fileDialogService;
         
         LoadImagesCommand = new RelayCommand(() => RunBusyAsync(LoadImagesAsync),
             () => !IsLoading);
@@ -57,7 +61,12 @@ public sealed class MainViewModel : BaseViewModel
 
     private async Task LoadImagesAsync()
     {
-        var result = await _loadImageUseCase.ExecuteAsync(_imageCollection);
+        var filePaths = _fileDialogService.OpenImageFilesDialog();
+
+        if (filePaths.Count == 0)
+            return;
+        
+        var result = await _loadImageUseCase.ExecuteAsync(_imageCollection, filePaths);
             
         foreach (var image in result.LoadedImages) 
             Images.Add(new ImageItemViewModel(image));
@@ -66,21 +75,26 @@ public sealed class MainViewModel : BaseViewModel
         {
             var message = string.Join(Environment.NewLine, 
                 result.Errors.Select(e => $"{Path.GetFileName(e.FilePath)}: {e.Reason}"));
+            
             _dialogService.ShowWarning($"Не удалось загрузить некоторые файлы: {Environment.NewLine}{message}");
         }
     }
 
     private async Task SerializeAsync()
     {
-        var result =  await _serializeCollectionUseCase.ExecuteAsync(_imageCollection);
-        
-        if (!result.Saved)
-            return;
+        var filePath = _fileDialogService.SaveDocumentDialog(
+            fileName: $"collection_{DateTime.UtcNow:ddMMyyyy_HHmmss}.imgcollection",
+            filter: CollectionFileFilter);
 
-        if (result.SkippedOriginalPaths.Count > 0)
+        if (filePath is null)
+            return;
+        
+        var skippedOriginalPaths =  await _serializeCollectionUseCase.ExecuteAsync(_imageCollection, filePath);
+
+        if (skippedOriginalPaths.Count > 0)
         {
             var names = string.Join(Environment.NewLine,
-                result.SkippedOriginalPaths.Select(Path.GetFileName));
+                skippedOriginalPaths.Select(Path.GetFileName));
             
             _dialogService.ShowWarning($"Изображения сохранены, но у некоторых из них " + 
                 $"оригиналы данных не удалось прочитать (был удален или перемещен): {Environment.NewLine}{names}");
@@ -93,10 +107,12 @@ public sealed class MainViewModel : BaseViewModel
 
     private async Task DeserializeAsync()
     {
-        var loadedCollection = await _deserializeCollectionUseCase.ExecuteAsync();
-
-        if (loadedCollection is null)
+        var filePath = _fileDialogService.OpenDocumentDialog(CollectionFileFilter);
+        
+        if (filePath is null)
             return;
+        
+        var loadedCollection = await Task.Run(() => _deserializeCollectionUseCase.ExecuteAsync(filePath));
 
         _imageCollection = loadedCollection;
         
@@ -112,8 +128,7 @@ public sealed class MainViewModel : BaseViewModel
             return;
 
         var confirmed = _dialogService.Confirm(
-            "Несохраненные изображения будут потеряны."+
-            $"Очистить список изображений?: {Environment.NewLine}",
+            "Несохраненные изображения будут потеряны. Очистить список изображений?",
             "Очистка списка изображений.");
 
         if (!confirmed)
@@ -125,7 +140,7 @@ public sealed class MainViewModel : BaseViewModel
 
     private async Task RunBusyAsync(Func<Task> work, string? errorMessagePrefix = null)
     {
-        IsLoading =  true;
+        IsLoading = true;
 
         try
         {
@@ -133,7 +148,11 @@ public sealed class MainViewModel : BaseViewModel
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError($"{errorMessagePrefix}: {exception.Message}");
+            var message = errorMessagePrefix is null
+                ? exception.Message
+                : $"{errorMessagePrefix}: {exception.Message}";
+
+            _dialogService.ShowError(message);
         }
         finally
         {

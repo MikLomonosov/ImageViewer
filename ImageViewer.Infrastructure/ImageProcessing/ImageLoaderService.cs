@@ -1,5 +1,4 @@
 using System.IO;
-using System.Windows.Media.Imaging;
 using ImageViewer.Application.Configuration;
 using ImageViewer.Application.Interfaces;
 using ImageViewer.Application.Models;
@@ -75,48 +74,32 @@ public class ImageLoaderService : IImageLoaderService
                 return (null, new ImageLoadError(path, $"Файл превышает допустимый размер в {limitReadable}"));
             }
 
-            var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
 
-            var dimensions = TryGetDimensions(bytes);
-            if (dimensions is null)
+            var decodedResult = await Task.Run(
+                    () => _thumbnailService.DecodeAndCreateThumbnail(bytes),
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (decodedResult is null)
                 return (null, new ImageLoadError(path, "Не удалось распознать формат изображения."));
 
-            var createdAtUtc = new DateTimeOffset(fileInfo.CreationTimeUtc, TimeSpan.Zero);
+            var (dimensions, thumbnailBytes) = decodedResult.Value;
+            var createdDateUtc = new DateTimeOffset(fileInfo.CreationTimeUtc, TimeSpan.Zero);
 
             var image = Image.Create(fileInfo.Name,
                                 fileInfo.FullName,
-                                    createdAtUtc,
-                                    FileSize.FromBytes(fileInfo.Length),
-                                    dimensions);
-
-            var thumbnailData = _thumbnailService.CreateThumbnail(ImageBinaryData.CreateFromBytes(bytes));
-            image.AttachThumbnail(thumbnailData);
+                                createdDateUtc,
+                                FileSize.FromBytes(fileInfo.Length),
+                                dimensions);
+            
+            image.AttachThumbnail(thumbnailBytes);
 
             return (image, null);
         }
         catch (Exception exception)
         {
             return (null, new ImageLoadError(path, $"Ошибка загрузки: {exception.Message}"));
-        }
-    }
-
-    private static ImageDimensions? TryGetDimensions(byte[] bytes)
-    {
-        try
-        {
-            using var stream = new MemoryStream(bytes);
-
-            var decoder = BitmapDecoder.Create(stream,
-                                                BitmapCreateOptions.DelayCreation, // decode only header
-                                                BitmapCacheOption.None);
-            
-            var frame = decoder.Frames[0];
-            
-            return ImageDimensions.Create(frame.PixelWidth, frame.PixelHeight);
-        }
-        catch
-        {
-            return null;
         }
     }
 }

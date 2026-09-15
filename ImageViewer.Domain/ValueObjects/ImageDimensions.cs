@@ -1,7 +1,7 @@
 namespace ImageViewer.Domain.ValueObjects;
 
-public record ImageDimensions
-{
+public sealed record ImageDimensions {
+    
     public int Width { get; }
     public int Height { get; }
     
