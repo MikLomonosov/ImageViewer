@@ -5,7 +5,8 @@ namespace ImageViewer.Wpf.Services;
 
 public class FileDialogService : IFileDialogService
 {
-    public IReadOnlyList<string> OpenImageFilesDialog()
+    
+    public Task<IReadOnlyList<string>> OpenImageFilesDialogAsync()
     {
         var dialog = new OpenFileDialog
         {
@@ -14,12 +15,14 @@ public class FileDialogService : IFileDialogService
             Multiselect = true
         };
         
-        return dialog.ShowDialog() == true 
-            ? dialog.FileNames 
-            : Array.Empty<string>();
+        IReadOnlyList<string> result = dialog.ShowDialog() == true 
+                                        ? dialog.FileNames 
+                                        : Array.Empty<string>();
+        
+        return Task.FromResult(result);
     }
 
-    public string? SaveDocumentDialog(string fileName, string filter)
+    public Task<string?> SaveDocumentDialogAsync(string fileName, string filter)
     {
         var dialog = new SaveFileDialog
         {
@@ -28,10 +31,12 @@ public class FileDialogService : IFileDialogService
             Filter = filter
         };
         
-        return dialog.ShowDialog() == true ? dialog.FileName : null;
+        var result = dialog.ShowDialog() == true ? dialog.FileName : null;
+        
+        return Task.FromResult(result);
     }
 
-    public string? OpenDocumentDialog(string filter)
+    public Task<string?> OpenDocumentDialogAsync(string filter)
     {
         var dialog = new OpenFileDialog
         {
@@ -40,6 +45,8 @@ public class FileDialogService : IFileDialogService
             Multiselect = true
         };
         
-        return dialog.ShowDialog() == true ? dialog.FileName : null;
+        var result = dialog.ShowDialog() == true ? dialog.FileName : null;
+        
+        return Task.FromResult(result);
     }
 }

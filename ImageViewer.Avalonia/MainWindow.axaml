@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ImageViewer.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="ImageViewer.Avalonia.MainWindow"
+        Title="ImageViewer"
+        Width="800" Height="600">
+        
+         <Grid Margin="12" RowDefinitions="Auto,*">
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+            <Button Content="Загрузить изображения" 
+                    Command="{Binding LoadImagesCommand}"
+                    Padding="12,6"
+                    Cursor="Hand"/>
+
+            <Button Content="Сохранить в файл"
+                    Command="{Binding SerializeCollectionCommand}"
+                    Padding="12,6"
+                    IsVisible="{Binding HasImages}"
+                    Cursor="Hand"/>
+
+            <Button Content="Открыть из файла"
+                    Command="{Binding DeserializeCollectionCommand}"
+                    Padding="12,6"
+                    Cursor="Hand"/>
+
+            <Button Content="Очистить список"
+                    Command="{Binding ClearCommand}"
+                    Padding="12,6"
+                    IsVisible="{Binding HasImages}"
+                    Cursor="Hand"/>
+
+            <TextBlock Text="Загрузка..."
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       IsVisible="{Binding IsLoading}"/>
+        </StackPanel>
+
+        <!-- Список / Placeholder -->
+        <Grid Grid.Row="1">
+            <ListBox ItemsSource="{Binding Images}"
+                     SelectionMode="Single"
+                     IsVisible="{Binding HasImages}">
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ImageItemViewModel">
+                        <Border BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="8">
+                            <Grid ColumnDefinitions="100,*">
+
+                                <!-- Превью -->
+                                <Border Grid.Column="0" Width="90" Height="90"
+                                        Background="#F0F0F0"
+                                        VerticalAlignment="Center">
+                                    <Image Source="{Binding Thumbnail}" Stretch="Uniform"/>
+                                </Border>
+
+                                <!-- Метаданные -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock Text="{Binding FileName}" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="{Binding SizeFormatted}" Opacity="0.7"/>
+                                    <TextBlock Text="{Binding CreatedDateFormatted}" Opacity="0.7"/>
+                                    <TextBlock Text="{Binding DimensionsFormatted}" Opacity="0.7"/>
+                                    <TextBlock Text="{Binding Path}" Opacity="0.7"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock Text="Список пуст. Нажмите «Загрузить изображения», чтобы начать."
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.5"
+                       FontSize="14"
+                       IsVisible="{Binding !HasImages}"/>
+        </Grid>
+    </Grid>
+</Window>

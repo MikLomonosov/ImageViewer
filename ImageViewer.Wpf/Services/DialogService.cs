@@ -5,31 +5,37 @@ namespace ImageViewer.Wpf.Services;
 
 public class DialogService : IDialogService
 {
-    public void ShowInfo(string message, string? title = null)
+    public Task ShowInfoAsync(string message, string? title = null)
     {
         MessageBox.Show(message,
                 title ?? "Информация",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+
+        return Task.CompletedTask;
     }
 
-    public void ShowWarning(string message, string? title = null)
+    public Task ShowWarningAsync(string message, string? title = null)
     {
         MessageBox.Show(message,
                 title ?? "Предостережение",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+        
+        return Task.CompletedTask;
     }
 
-    public void ShowError(string message, string? title = null)
+    public Task ShowErrorAsync(string message, string? title = null)
     {
         MessageBox.Show(message,
                 title ?? "Ошибка",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
+        
+        return Task.CompletedTask;
     }
 
-    public bool Confirm(string message, string? title = null)
+    public Task<bool> ConfirmAsync(string message, string? title = null)
     {
         var result = MessageBox.Show(message,
                                 title ?? "Подтверждение",
@@ -37,6 +43,6 @@ public class DialogService : IDialogService
                                 MessageBoxImage.Question);
 
 
-        return result == MessageBoxResult.Yes;
+        return Task.FromResult(result == MessageBoxResult.Yes);
     }
 }

@@ -1,8 +1,8 @@
-using System.IO;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ImageViewer.Application.Interfaces;
 using ImageViewer.Domain.ValueObjects;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 
 namespace ImageViewer.Infrastructure.ImageProcessing;
 
@@ -12,21 +12,17 @@ public class ThumbnailService : IThumbnailService
     {
         try
         {
-            using var stream = new MemoryStream(originalData);
+            using var image = Image.Load(originalData);
+            
+            var dimensions = ImageDimensions.Create(image.Width, image.Height);
 
-            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-            var frame = decoder.Frames[0];
-            var dimensions = ImageDimensions.Create(frame.PixelWidth, frame.PixelHeight);
-            var scale = Math.Min(1.0, (double)maxWidth / frame.PixelWidth);
-
-            var thumbnail = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
-            thumbnail.Freeze();
-
-            var encoder = new JpegBitmapEncoder { QualityLevel = 80 };
-            encoder.Frames.Add(BitmapFrame.Create(thumbnail));
-
+            var scale = Math.Min(1.0, (double)maxWidth / image.Width);
+            var thumbnailHeight = (int)(image.Height * scale);
+            
+            image.Mutate(x => x.Resize(maxWidth, thumbnailHeight));
+            
             using var outputStream = new MemoryStream();
-            encoder.Save(outputStream);
+            image.Save(outputStream, new JpegEncoder { Quality = 80 });
 
             return (dimensions, ImageBinaryData.CreateFromBytes(outputStream.ToArray()));
         }

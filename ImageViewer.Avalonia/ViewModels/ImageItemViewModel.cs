@@ -1,14 +1,15 @@
-using System.Windows.Media.Imaging;
+using System;
+using Avalonia.Media.Imaging;
 using ImageViewer.Domain.Entities;
 using ImageViewer.Domain.ValueObjects;
-using ImageViewer.Wpf.ViewModels.Base;
+using ImageViewer.Avalonia.ViewModels.Base;
 
-namespace ImageViewer.Wpf.ViewModels;
+namespace ImageViewer.Avalonia.ViewModels;
 
 public sealed class ImageItemViewModel : BaseViewModel
 {
     private readonly Image _image;
-    private BitmapImage? _thumbnailSource;
+    private Bitmap? _thumbnail;
     private bool _isSelected;
     
     public Guid Id => _image.Id;
@@ -18,16 +19,7 @@ public sealed class ImageItemViewModel : BaseViewModel
     public string CreatedDateFormatted => _image.CreatedDateUtc.ToLocalTime().ToString("g");
     public string DimensionsFormatted => _image.Dimensions?.ToString() ?? "-";
 
-    public BitmapImage? Thumbnail
-    {
-        get
-        {
-            if (_thumbnailSource is null && _image.Thumbnail is not null)
-                _thumbnailSource = CreateBitmapImage(_image.Thumbnail);
-            
-            return _thumbnailSource;
-        }
-    }
+    public Bitmap? Thumbnail => _thumbnail;
 
     public bool IsSelected
     {
@@ -40,23 +32,16 @@ public sealed class ImageItemViewModel : BaseViewModel
     public ImageItemViewModel(Image image)
     {
         _image = image ?? throw new ArgumentNullException(nameof(image));
+        _thumbnail = _image.Thumbnail is not null ? CreateBitmap(_image.Thumbnail) : null;
     }
     
     #endregion
 
-    private static BitmapImage CreateBitmapImage(ImageBinaryData imageBinaryData)
+    private static Bitmap CreateBitmap(ImageBinaryData imageBinaryData)
     {
-        var image = new BitmapImage();
-        
         using var stream = imageBinaryData.OpenRead();
         
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad; // load to memory and close the stream
-        image.StreamSource = stream;
-        image.EndInit();
-        image.Freeze(); //thread safety
-        
-        return image;
+        return new Bitmap(stream);
     }
 
     
