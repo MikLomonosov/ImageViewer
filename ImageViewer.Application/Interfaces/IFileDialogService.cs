@@ -2,8 +2,8 @@ namespace ImageViewer.Application.Interfaces;
 
 public interface IFileDialogService
 {
-    IReadOnlyList<string> OpenImageFilesDialog();
+    Task<IReadOnlyList<string>> OpenImageFilesDialogAsync();
 
-    string? SaveDocumentDialog(string fileName, string filter);
-    string? OpenDocumentDialog(string filter);
+    Task<string?> SaveDocumentDialogAsync(string fileName, string filter);
+    Task<string?> OpenDocumentDialogAsync(string filter);
 }

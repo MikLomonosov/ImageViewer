@@ -1,12 +1,15 @@
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using ImageViewer.Application.Interfaces;
 using ImageViewer.Application.UseCases;
 using ImageViewer.Domain.Aggregates;
-using ImageViewer.Wpf.ViewModels.Base;
+using ImageViewer.Avalonia.ViewModels.Base;
 
-namespace ImageViewer.Wpf.ViewModels;
+namespace ImageViewer.Avalonia.ViewModels;
 
 public sealed class MainViewModel : BaseViewModel
 {
@@ -18,18 +21,30 @@ public sealed class MainViewModel : BaseViewModel
     private const string CollectionFileFilter = "Файлы коллекции|*.imgcollection|Все файлы|*.*";
     
     public ObservableCollection<ImageItemViewModel> Images { get; } = new();
+    public bool HasImages => Images.Count > 0;
     private ImageCollection _imageCollection = ImageCollection.Create();
+
+    private readonly RelayCommand _loadImagesCommand;
+    public ICommand LoadImagesCommand => _loadImagesCommand;
+    private readonly RelayCommand _serializeCollectionCommand;
+    public ICommand SerializeCollectionCommand => _serializeCollectionCommand;
+    private readonly RelayCommand _deserializeCollectionCommand;
+    public ICommand DeserializeCollectionCommand => _deserializeCollectionCommand;
+    private readonly RelayCommand _clearCommand;
+    public ICommand ClearCommand => _clearCommand;
     
-    public ICommand LoadImagesCommand { get; }
-    public ICommand SerializeCollectionCommand { get; }
-    public ICommand DeserializeCollectionCommand { get; }
-    public ICommand ClearCommand { get; }
     
     private bool _isLoading;
     public bool IsLoading
     {
         get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                RaiseAllCanExecuteChanged();
+            }
+        }
     }
     
     #region constructors
@@ -46,15 +61,21 @@ public sealed class MainViewModel : BaseViewModel
         _deserializeCollectionUseCase = deserializeCollectionUseCase;
         _fileDialogService = fileDialogService;
         
-        LoadImagesCommand = new RelayCommand(() => RunBusyAsync(LoadImagesAsync),
+        Images.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasImages));
+            RaiseAllCanExecuteChanged();
+        };
+        
+        _loadImagesCommand = new RelayCommand(() => RunBusyAsync(LoadImagesAsync),
             () => !IsLoading);
-        SerializeCollectionCommand = new RelayCommand( 
+        _serializeCollectionCommand = new RelayCommand( 
             () => RunBusyAsync(SerializeAsync, "Не удалось сохранить изображения"),
-            () => !IsLoading &&  Images.Count > 0);
-        DeserializeCollectionCommand = new RelayCommand( 
+            () => !IsLoading && HasImages);
+        _deserializeCollectionCommand = new RelayCommand( 
             () =>  RunBusyAsync(DeserializeAsync, "Не удалось загрузить изображения"), 
             () => !IsLoading);
-        ClearCommand = new RelayCommand(Clear, () => !IsLoading && Images.Count > 0);
+        _clearCommand = new RelayCommand(Clear, () => !IsLoading && HasImages);
     }
     
     #endregion
@@ -71,12 +92,14 @@ public sealed class MainViewModel : BaseViewModel
         foreach (var image in result.LoadedImages) 
             Images.Add(new ImageItemViewModel(image));
 
+        RaiseAllCanExecuteChanged();
+
         if (result.Errors.Count > 0)
         {
             var message = string.Join(Environment.NewLine, 
                 result.Errors.Select(e => $"{Path.GetFileName(e.FilePath)}: {e.Reason}"));
             
-            await _dialogService.ShowWarningAsync($"Не удалось загрузить некоторые файлы: {Environment.NewLine}{message}");
+            await _dialogService.ShowErrorAsync($"Не удалось загрузить некоторые файлы: {Environment.NewLine}{message}");
         }
     }
 
@@ -120,6 +143,8 @@ public sealed class MainViewModel : BaseViewModel
 
         foreach (var image in _imageCollection.Images)
             Images.Add(new ImageItemViewModel(image));
+
+        RaiseAllCanExecuteChanged();
     }
 
     private async Task Clear()
@@ -136,6 +161,8 @@ public sealed class MainViewModel : BaseViewModel
         
         _imageCollection.Clear();
         Images.Clear();
+
+        RaiseAllCanExecuteChanged();
     }
 
     private async Task RunBusyAsync(Func<Task> work, string? errorMessagePrefix = null)
@@ -158,5 +185,13 @@ public sealed class MainViewModel : BaseViewModel
         {
             IsLoading = false;
         }
+    }
+
+    private void RaiseAllCanExecuteChanged()
+    {
+        _loadImagesCommand.RaiseCanExecuteChanged();
+        _serializeCollectionCommand.RaiseCanExecuteChanged();
+        _deserializeCollectionCommand.RaiseCanExecuteChanged();
+        _clearCommand.RaiseCanExecuteChanged();
     }
 }

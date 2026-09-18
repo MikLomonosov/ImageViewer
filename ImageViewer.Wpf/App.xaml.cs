@@ -61,6 +61,7 @@ public partial class App : System.Windows.Application
         services.Configure<ImageLoadingLimits>(opts =>
         {
             opts.MaxFileSizeBytes = 50 * 1024 * 1024;
+            opts.MaxDegreeOfParallelism = 4;
         });
         
         services.AddSingleton<IImageLoaderService, ImageLoaderService>();

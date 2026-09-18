@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewer.Domain", "ImageViewer.Domain\ImageViewer.Domain.csproj", "{E1A1A5B4-42B1-4AC5-8874-E86BC5E22ABA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewer.Application", "ImageViewer.Application\ImageViewer.Application.csproj", "{93A9DEC3-A277-4F95-B977-4650D51C9897}"
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewer.Wpf", "ImageViewer.Wpf\ImageViewer.Wpf.csproj", "{DC35900A-456A-4EF9-9E33-B7CF9C0D8365}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewer.Tests", "ImageViewer.Tests\ImageViewer.Tests.csproj", "{87CBCBD7-2B63-450A-B94E-369D696D9856}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewer.Avalonia", "ImageViewer.Avalonia\ImageViewer.Avalonia.csproj", "{3E672079-F9AC-41B5-8612-A2E0FD99E8F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,5 +39,9 @@ Global
 		{87CBCBD7-2B63-450A-B94E-369D696D9856}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87CBCBD7-2B63-450A-B94E-369D696D9856}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87CBCBD7-2B63-450A-B94E-369D696D9856}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E672079-F9AC-41B5-8612-A2E0FD99E8F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E672079-F9AC-41B5-8612-A2E0FD99E8F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E672079-F9AC-41B5-8612-A2E0FD99E8F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E672079-F9AC-41B5-8612-A2E0FD99E8F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
